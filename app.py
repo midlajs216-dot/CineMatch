@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import pickle
@@ -17,16 +16,17 @@ st.set_page_config(
 @st.cache_resource
 def load_data():
 
-    with open("/content/movies.pkl", "rb") as f:
+    with open("movies.pkl", "rb") as f:
         movies = pickle.load(f)
 
-    with open("/content/similarity.pkl", "rb") as f:
+    with open("similarity.pkl", "rb") as f:
         similarity = pickle.load(f)
 
     return movies, similarity
 
 
 movies, similarity = load_data()
+
 
 # =========================
 # TMDB TOKEN
@@ -36,6 +36,7 @@ TMDB_TOKEN = st.secrets.get("TMDB_TOKEN", "")
 
 TMDB_URL = "https://api.themoviedb.org/3/search/movie"
 IMAGE_URL = "https://image.tmdb.org/t/p/w500"
+
 
 # =========================
 # MOVIE DETAILS
@@ -110,13 +111,8 @@ def recommend(movie_title):
 
     index = matches.index[0]
 
-    distances = similarity[index]
-
-    movie_list = sorted(
-        enumerate(distances),
-        key=lambda x: x[1],
-        reverse=True
-    )[1:6]
+    # Compact similarity model
+    movie_list = similarity[index][:5]
 
     recommendations = []
 
@@ -180,6 +176,7 @@ html, body {
     color: #e50914;
 }
 
+
 /* HERO */
 
 .hero {
@@ -205,6 +202,7 @@ html, body {
     margin: 22px auto 0;
 }
 
+
 /* INPUT */
 
 .stTextInput input {
@@ -213,6 +211,7 @@ html, body {
     border: 1px solid #333 !important;
     border-radius: 12px !important;
 }
+
 
 /* BUTTON */
 
@@ -225,6 +224,7 @@ html, body {
     font-weight: 700;
 }
 
+
 /* RESULT */
 
 .result-title {
@@ -232,6 +232,9 @@ html, body {
     font-weight: 800;
     margin: 50px 0 25px;
 }
+
+
+/* MOVIE CARD */
 
 .movie-card {
     background: #151515;
@@ -280,6 +283,9 @@ html, body {
     margin-top: 10px;
 }
 
+
+/* FOOTER */
+
 .footer {
     text-align: center;
     color: #666;
@@ -291,6 +297,7 @@ html, body {
 </style>
 """)
 
+
 # =========================
 # HEADER
 # =========================
@@ -300,6 +307,7 @@ st.html("""
     Cine<span>Match</span> 🎬
 </div>
 """)
+
 
 # =========================
 # HERO
@@ -322,6 +330,7 @@ to discover movies with a similar feel.
 </div>
 """)
 
+
 # =========================
 # SEARCH
 # =========================
@@ -330,6 +339,7 @@ movie_input = st.text_input(
     "Movie",
     placeholder="Try: Interstellar, Inception, Avatar..."
 )
+
 
 if st.button("🔍 Find My Movies"):
 
@@ -344,6 +354,12 @@ if st.button("🔍 Find My Movies"):
         if selected_movie is None:
 
             st.error("Movie not found. Try another title.")
+
+        elif not recommendations:
+
+            st.warning(
+                "Recommendations were found, but movie details could not be loaded."
+            )
 
         else:
 
@@ -397,6 +413,7 @@ if st.button("🔍 Find My Movies"):
                             </div>
                             """
                         )
+
 
 # =========================
 # FOOTER
