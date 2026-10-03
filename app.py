@@ -45,6 +45,10 @@ IMAGE_URL = "https://image.tmdb.org/t/p/w500"
 @st.cache_data
 def get_movie_details(title):
 
+    if not TMDB_TOKEN:
+        st.error("❌ TMDB_TOKEN is missing from Streamlit Secrets.")
+        return None
+
     headers = {
         "Authorization": f"Bearer {TMDB_TOKEN}",
         "accept": "application/json"
@@ -64,11 +68,16 @@ def get_movie_details(title):
         )
 
         if response.status_code != 200:
+            st.error(
+                f"❌ TMDB API Error: {response.status_code}\n\n"
+                f"{response.text[:500]}"
+            )
             return None
 
         results = response.json().get("results", [])
 
         if not results:
+            st.warning(f"⚠️ TMDB found no results for: {title}")
             return None
 
         movie = results[0]
@@ -82,7 +91,9 @@ def get_movie_details(title):
             "release_date": movie.get("release_date", "")
         }
 
-    except Exception:
+    except Exception as e:
+
+        st.error(f"❌ TMDB connection error: {e}")
         return None
 
 
@@ -111,7 +122,6 @@ def recommend(movie_title):
 
     index = matches.index[0]
 
-    # Compact similarity model
     movie_list = similarity[index][:5]
 
     recommendations = []
@@ -164,8 +174,6 @@ html, body {
     padding-top: 2rem;
 }
 
-/* LOGO */
-
 .logo {
     font-size: 32px;
     font-weight: 800;
@@ -175,9 +183,6 @@ html, body {
 .logo span {
     color: #e50914;
 }
-
-
-/* HERO */
 
 .hero {
     text-align: center;
@@ -202,18 +207,12 @@ html, body {
     margin: 22px auto 0;
 }
 
-
-/* INPUT */
-
 .stTextInput input {
     background: #171717 !important;
     color: white !important;
     border: 1px solid #333 !important;
     border-radius: 12px !important;
 }
-
-
-/* BUTTON */
 
 .stButton button {
     width: 100%;
@@ -224,17 +223,11 @@ html, body {
     font-weight: 700;
 }
 
-
-/* RESULT */
-
 .result-title {
     font-size: 30px;
     font-weight: 800;
     margin: 50px 0 25px;
 }
-
-
-/* MOVIE CARD */
 
 .movie-card {
     background: #151515;
@@ -282,9 +275,6 @@ html, body {
     line-height: 1.5;
     margin-top: 10px;
 }
-
-
-/* FOOTER */
 
 .footer {
     text-align: center;
